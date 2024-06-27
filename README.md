@@ -1,74 +1,98 @@
-# Reddit Clone
+# API Backend Reddit Clone - Symfony vs. Laravel
 
-A Dockerized clone of Reddit, split into Symfony/Api Platform Backend and Vue.js Frontend.
+A full-stack Reddit clone with a Vue 3 / TypeScript frontend, built twice with diffrent stack. Once with **Symfony 7 + API Platform**, and once with **Laravel 11**. Target of the project was to directly compare the two frameworks' developer experience on the same domain, the same endpoints, and the same database. 
 
-## Backend Startup
+API endpoints as well as whole frontend were designed and planned before starting development of backend.
 
-1. Prepare a `.env.local` file based on the provided example.
-2. Run `composer install`.
-3. Create Docker images for the database and PHP server:
+The Symfony version was built first (`legacy/backend/symfony`) and later rebuilt from scratch in Laravel (`dev/backend`) as a deliberate side-by-side experiment, not a migration. Both implementations model the same core domain: users, subreddits/communities, threads/posts, comments, and membership, behind a custom token-authenticated REST API.
 
-    ```sh
-    docker compose --env-file .env.local build --no-cache
-    ```
-   >⚠️ **Warning:** Rebuilding images can result in dangling images. Remember to clean them off after each use.
+> This repo is a fork of [km385/Reddit-clone](https://github.com/km385/Reddit-clone). Frontend: Vue 3 + TypeScript ([source](https://github.com/km385/Reddit-clone)). Backend: this repo, on two separate branches.
 
-4. Start up containers:
+| | |
+|---|---|
+| **Frontend** | branch [`dev/frontend`](./Frontend) |
+| **Backend (Laravel)** | branch [`dev/backend`](../../tree/dev/backend/Backend) |
+| **Backend (Symfony)** | branch [`legacy/backend/symfony`](../../tree/legacy/backend/symfony/Backend) |
 
-    ```sh
-    docker compose --env-file .env.local up --wait
-    ```
+---
 
-5. After successfully configuring the server, visit [https://localhost/api](https://localhost/api) to test server API endpoints, or check out [http://localhost/_profiler](http://localhost/_profiler) for server statistics.
+## Why two backends?
 
-### Local PHP Server
+Both frameworks are commonly recommended for "serious" PHP APIs, but they solve the same problems very differently, declarative resource metadata vs. explicit controllers, an ORM-driven API layer vs. a thin one. Rather than read about the trade-offs, this project builds the identical app twice to feel them directly: routing, auth, validation, serialization, filtering, testing, and Docker setup, done once in each framework.
 
-If you prefer to use a local PHP server (database server is still required) run:
+## At a glance
 
-    ```sh
-    symfony serve -d
-    ```
+| | Symfony backend | Laravel backend |
+|---|---|---|
+| Framework | Symfony 7.0 | Laravel 11 |
+| API layer | API Platform 3.2 | Custom controllers |
+| ORM | Doctrine ORM 2.9 | Eloquent |
+| Auth | Custom `AccessToken` entity + `AccessController` | Laravel Sanctum, with custom token abilities (`access-api`, `refresh-token`) |
+| API docs | Auto-generated OpenAPI/Swagger via API Platform | `dedoc/scramble` (auto-generated OpenAPI from routes/types) |
+| Real-time | Mercure Hub bundled in | Not included |
+| Test data | Foundry (factories) + Doctrine fixtures | Laravel factories + seeders |
+| Testing | PHPUnit, API-focused test suite (`tests/Api/*`) | PHPUnit, feature tests organized by domain (`tests/Feature/Auth/*`, `tests/Feature/Resources/*`) |
+| Container runtime | Custom Docker Compose setup | Laravel Sail |
 
-## Frontend Startup
 
-### Docker Setup
+## Quick start
 
-1. Build the Docker image:
+### Frontend (either backend)
 
-   ```sh
-   docker build . -t reddit-clone-client
-   ```
+```sh
+cd Frontend
+npm run dev        # local dev server with hot-reload
 
-2. Run the Docker container:
+# or, containerized:
+docker build . -t reddit-clone-client
+docker run -d -p 8080:80 --name reddit-clone-frontend reddit-clone-client
+```
 
-   ```sh
-   docker run -d -p 8080:80 --name reddit-clone-frontend reddit-clone-client
-   ```
+### Backend Laravel (`dev/backend`)
 
-### Local Development Server
+```sh
+git checkout dev/backend
+cd Backend
+cp .env.example .env
+bash vendor/bin/sail build --no-cache
+bash vendor/bin/sail up -d
+bash vendor/bin/sail artisan migrate
+```
 
-For development purposes, compile and hot-reload using:
+API docs: `http://127.0.0.1:8000/api/documentation`
 
-   ```sh
-   npm run dev
-   ```
+Local (non-Sail) alternative:
 
-## Tech Stack
+```sh
+composer install        # then point .env at localhost instead of pgsql
+php artisan serve
+php artisan migrate
+```
 
-| Technology   |  Version   |
-|:-------------|:----------:|
-| Symfony      |   v7.0.3   |
-| Api Platform |  v3.2.13   |
-| PHP          |  v8.2.12   |
-| Postgres     | v16-alpine |
-| Vue          |  v3.4.15   |
-| Vite         |  v5.0.11   |
+### Backend Symfony (`legacy/backend/symfony`)
+
+```sh
+git checkout legacy/backend/symfony
+cd Backend
+cp .env.local.example .env.local
+docker compose --env-file .env.local build --no-cache
+docker compose --env-file .env.local up --wait
+```
+
+API: `https://localhost/api` · Profiler: `http://localhost/_profiler`
+
+Local (non-Docker) alternative:
+
+```sh
+composer install         # point DATABASE_URL in .env.local at localhost
+symfony serve -d          # or: php -S localhost:8000 -t public
+php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration
+```
+
 
 ## Team
 
-| Who                                          | What     |
-|:-------------------------------------------- |:--------:|
-| [@Jakub F](https://github.com/km385)        | Frontend |
-| [@Mateusz C](https://github.com/MateuszCzz) | Backend  |
-
----
+| Who | What |
+|---|---|
+| [@Jakub F](https://github.com/km385) | Frontend |
+| [@Mateusz C](https://github.com/MateuszCzz) | Symfony/API Platform  & Laravel implementation |
