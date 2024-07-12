@@ -1,66 +1,94 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Reddit Clone Backend
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Welcome to the Reddit Clone Backend project! This is a Dockerized REST API built with Laravel.
 
-## About Laravel
+## Backend Startup
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+1. Prepare a `.env` file based on the provided example.
+2. Build Docker images for the database and PHP server using the following command:
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+    ```sh
+    bash vendor/bin/sail build --no-cache
+    ```
+   >⚠️ **Warning:** Rebuilding images can result in dangling images. Remember to clean them off after each use.
+   >
+   >⚠️ **Warning:** Git can break docker containers with converting line ending from windows's LF to CRLF. 
+   To disable CRLF conversion globally, run `git config --global core.autocrlf false`, and clone again.
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+3. Start up the containers with:
 
-## Learning Laravel
+    ```sh
+    bash vendor/bin/sail up -d
+    ```
+4. Prepare database with migration:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+    ```sh
+    bash vendor/bin/sail artisan migrate
+    ```
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+4. Once the server is successfully configured, you can test the API endpoints by using swagger documentation [http://127.0.0.1:8000/api/documentation](http://127.0.0.1:8000/api/documentation).
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### Local PHP Server
 
-## Laravel Sponsors
+If you prefer to use a local PHP server instead of the fully dockerized variant:
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+1. Install necessary dependencies with Composer:
 
-### Premium Partners
+    ```sh
+    composer install
+    ```
+      >⚠️ **Warning:** Remember to change host in `.env` from pgsql to localhost.
+ 
+2. Start the database docker image.
+3. Start the PHP server:
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+    ```sh
+    php artisan serve
+    ```
+4. Run migrations:
 
-## Contributing
+    ```sh
+    php artisan migrate
+    ```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Managing the Database
 
-## Code of Conduct
+- To log in to the PostgreSQL database:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+  ```sh
+  psql -U <username> -d <database_name>
+  ```
 
-## Security Vulnerabilities
+- To check the database structure:
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+  ```sh
+  \dt
+  ```
+  or
 
-## License
+  ```sh
+  SELECT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' );
+  ```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- To check columns of a given table:
+
+  ```sh
+  \d <table_name>
+  ```
+
+## Tech Stack
+
+| Technology   | Version   |
+| ------------ | --------- |
+| Laravel      | v11.9     |
+| PHP          | v8.2.12   |
+| PostgreSQL   | v15       |
+
+## Team
+
+| Who                                         | What      |
+| ------------------------------------------- | --------- |
+| [@Jakub F](https://github.com/km385)        | Frontend  |
+| [@Mateusz C](https://github.com/MateuszCzz) | Backend   |
+
+---
