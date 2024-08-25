@@ -9,6 +9,9 @@ class NicknameProvider extends \Faker\Provider\Base
     //choose a random name as base for the nickname; replace spaces with underscores
     $baseName = str_replace(' ', '_', $this->generator->name());
 
+    // Trim unsafe characters
+    $baseName = preg_replace('/[^A-Za-z0-9_-]/', '', $baseName);
+
     //calculate the length of the name and substract 1 for _ and leave rest for numbers 
     //10 to power of spaces - 1 is the currect top boundary
     $lengthForNumbers = $maxLength - 1 - strlen($baseName);
