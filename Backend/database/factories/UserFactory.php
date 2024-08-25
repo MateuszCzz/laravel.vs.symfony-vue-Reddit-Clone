@@ -2,9 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Providers\NicknameProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Faker\Generator as Faker;
+
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
@@ -23,11 +26,14 @@ class UserFactory extends Factory
      */
     public function definition(): array
     {
+        $faker = app(Faker::class);
+        $faker->addProvider(new NicknameProvider($faker));
+
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
+            'nickname' => $faker->nickname(),
+            'email' => fake()->safeEmail(),
             'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
+            'password' => static::$password ??= Hash::make('Password1'),
             'remember_token' => Str::random(10),
         ];
     }
