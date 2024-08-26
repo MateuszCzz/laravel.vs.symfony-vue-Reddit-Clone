@@ -58,13 +58,14 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        // check if login is email and find coresponding user else its nickname or just wrong
-
+        // check if login value is an email 
+        // If so, find coresponding user by their email 
+        // else attempt to find a user by their nickname
         $user = filter_var($request->login, FILTER_VALIDATE_EMAIL)
             ? User::where('email', $request->login)->first()
             : User::where('nickname', $request->login)->first();
 
-        //password check
+        // password check
         if (!$user || !Hash::check($request->password, $user->password)) {
             throw ValidationException::withMessages([
                 'login' => ['The provided credentials are incorrect.'],
@@ -93,11 +94,14 @@ class AuthController extends Controller
         //
     }
 
-    public function checkNickname(Request $request)
+    public function checkNickname(string $nickname)
     {
-        $request->validate([
-            'nickname' => 'required|alpha_dash:ascii|unique:users',
+        $validator = \Validator::make(['nickname' => $nickname], [
+            'nickname' => 'required|alpha_dash:ascii|min:3|max:20|unique:users',
         ]);
+        if ($validator->fails()) {
+            throw new ValidationException($validator);
+        }
 
         // Nickname is available and without injection
         return response()->json([
@@ -111,7 +115,7 @@ class AuthController extends Controller
         $faker = app(Faker::class);
         $faker->addProvider(new NicknameProvider($faker));
 
-        //how many time to try to generate unique nickname before giving error
+        // how many times try to generate unique nickname before giving up and returning server error
         $maxRetries = 250;
         $retryCount = 0;
         $nickname = null;
