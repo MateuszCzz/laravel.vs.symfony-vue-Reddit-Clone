@@ -11,7 +11,7 @@ class RegistrationTest extends TestCase
 
     private function registerUserPost(string $nickname, string $email, string $password, string $password_confirmation)
     {
-        return $this->post('/api/auth/register', [
+        return $this->postJson('/api/auth/register', [
             'nickname' => $nickname,
             'email' => $email,
             'password' => $password,
@@ -42,7 +42,7 @@ class RegistrationTest extends TestCase
     {
         $this->registerUserPost('testregister3', 'testuser@example.com', 'P@ssword1', 'P@ssword1');
         $response = $this->registerUserPost('testregister3', 'testuser2@example.com', 'P@ssword12', 'P@ssword12');
-        $response->assertSessionHasErrors([
+        $response->assertJsonValidationErrors([
             'nickname' => 'The nickname has already been taken.'
         ]);
     }
@@ -50,12 +50,12 @@ class RegistrationTest extends TestCase
     public function test_user_cannot_register_with_too_short_or_too_long_nickname(): void
     {
         $response = $this->registerUserPost('ab', 'testuser@example.com', 'P@ssword1', 'P@ssword1');
-        $response->assertSessionHasErrors([
+        $response->assertJsonValidationErrors([
             'nickname' => 'The nickname field must be at least 3 characters.'
         ]);
 
         $response = $this->registerUserPost('abbbbbbbbbbbbbbbbbbbbbbbbb', 'testuser@example.com', 'P@ssword1', 'P@ssword1');
-        $response->assertSessionHasErrors([
+        $response->assertJsonValidationErrors([
             'nickname' => 'The nickname field must not be greater than 20 characters.'
         ]);
     }
@@ -63,7 +63,7 @@ class RegistrationTest extends TestCase
     public function test_user_cannot_register_with_special_characters_in_nickname(): void
     {
         $response = $this->registerUserPost('testregister#$%@', 'testuser@example.com', 'P@ssword1', 'P@ssword1');
-        $response->assertSessionHasErrors([
+        $response->assertJsonValidationErrors([
             'nickname' => 'The nickname field must only contain letters, numbers, dashes, and underscores.'
         ]);
     }
@@ -72,22 +72,22 @@ class RegistrationTest extends TestCase
     {
         $response = $this->registerUserPost('testregister5', 'testuser@example.com', '', '');
 
-        $response->assertSessionHasErrors([
+        $response->assertJsonValidationErrors([
             'password' => 'The password field is required.'
         ]);
-        $response->assertSessionHasErrors([
+        $response->assertJsonValidationErrors([
             'password' => 'The password field must be a string.'
         ]);
 
         $response = $this->registerUserPost('', 'testuser@example.com', 'P@ssword1', 'P@ssword1');
-        $response->assertSessionHasErrors([
+        $response->assertJsonValidationErrors([
             'nickname' => 'The nickname field is required.'
         ]);
     }
 
     public function test_user_can_check_if_nickname_is_available(): void
     {
-        $response = $this->get('/api/auth/check-nickname/testregister6');
+        $response = $this->getJson('/api/auth/check-nickname/testregister6');
 
         $response->assertOk()
             ->assertJson([
@@ -101,47 +101,47 @@ class RegistrationTest extends TestCase
             'nickname' => 'testregister6',
         ]);
 
-        $response = $this->get('/api/auth/check-nickname/testregister6');
+        $response = $this->getJson('/api/auth/check-nickname/testregister6');
 
-        $response->assertSessionHasErrors([
+        $response->assertJsonValidationErrors([
             'nickname' => 'The nickname has already been taken.'
         ]);
     }
 
     public function test_nickname_availability_for_nothing(): void
     {
-        $response = $this->get('/api/auth/check-nickname/ ');
-        $response->assertSessionHasErrors([
+        $response = $this->getJson('/api/auth/check-nickname/ ');
+        $response->assertJsonValidationErrors([
             'nickname' => 'The nickname field is required.'
         ]);
     }
 
     public function test_nickname_availability_with_special_characters(): void
     {
-        $response = $this->get('/api/auth/check-nickname/invalid@$nickname');
-        $response->assertSessionHasErrors([
+        $response = $this->getJson('/api/auth/check-nickname/invalid@$nickname');
+        $response->assertJsonValidationErrors([
             'nickname' => 'The nickname field must only contain letters, numbers, dashes, and underscores.'
         ]);
     }
 
     public function test_nickname_availability_with_too_short_or_too_long_nickname(): void
     {
-        $response = $this->get('/api/auth/check-nickname/te');
-        $response->assertSessionHasErrors([
+        $response = $this->getJson('/api/auth/check-nickname/te');
+        $response->assertJsonValidationErrors([
             'nickname' => 'The nickname field must be at least 3 characters.'
         ]);
-        $response = $this->get('/api/auth/check-nickname/toolongnicknameaaaaaaaaaaaaaaaaaaa');
-        $response->assertSessionHasErrors([
+        $response = $this->getJson('/api/auth/check-nickname/toolongnicknameaaaaaaaaaaaaaaaaaaa');
+        $response->assertJsonValidationErrors([
             'nickname' => 'The nickname field must not be greater than 20 characters.'
         ]);
     }
 
     public function test_user_can_generate_unique_nickname(): void
     {
-        $nicknameRequest = $this->post('/api/auth/generate-nickname');
+        $nicknameRequest = $this->postJson('/api/auth/generate-nickname');
         $nicknameRequest->assertOk();
 
-        $response = $this->get('/api/auth/check-nickname/' . $nicknameRequest->json('nickname'));
+        $response = $this->getJson('/api/auth/check-nickname/' . $nicknameRequest->json('nickname'));
         $response->assertOk()
             ->assertJson([
                 'available' => true
@@ -151,9 +151,9 @@ class RegistrationTest extends TestCase
     public function test_user_can_generate_unique_nickname_when_large_number_of_users(): void
     {
         User::factory()->createMany(100);
-        $nicknameRequest = $this->post('/api/auth/generate-nickname/');
+        $nicknameRequest = $this->postJson('/api/auth/generate-nickname/');
 
-        $response = $this->get('/api/auth/check-nickname/' . $nicknameRequest->json('nickname'));
+        $response = $this->getJson('/api/auth/check-nickname/' . $nicknameRequest->json('nickname'));
         $response->assertOk()
             ->assertJson([
                 'available' => true

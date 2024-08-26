@@ -20,7 +20,7 @@ class LoginTest extends TestCase
             ]);
         }
 
-        return $this->post('/api/auth/login', [
+        return $this->postJson('/api/auth/login', [
             'login' => $login,
             'password' => $password,
             'remember_me' => $rememberMe,
@@ -74,18 +74,18 @@ class LoginTest extends TestCase
     public function test_user_cannot_login_with_unregistered_nickname_or_email(): void
     {
         $response1 = $this->loginUserPost('test_unregistered@email.com', 'P@ssword1');
-        $response1->assertSessionHasErrors([
+        $response1->assertJsonValidationErrors([
             'login' => 'The provided credentials are incorrect.',
             'password' => 'The provided credentials are incorrect.'
         ]);
-        ;
+        
 
-        $response2 = $this->loginUserPost('test_registered', 'P@ssword1', true);
-        $response2->assertSessionHasErrors([
+        $response2 = $this->loginUserPost('test_registered', 'P@ssword1');
+        $response2->assertJsonValidationErrors([
             'login' => 'The provided credentials are incorrect.',
             'password' => 'The provided credentials are incorrect.'
         ]);
-        ;
+        
     }
 
     public function test_user_cannot_login_with_incorrect_credentials(): void
@@ -95,11 +95,11 @@ class LoginTest extends TestCase
             'password' => 'P@ssword2',
         ]);
         $response = $this->loginUserPost('Test_user_4', 'P@ssword1');
-        $response->assertSessionHasErrors([
+        $response->assertJsonValidationErrors([
             'login' => 'The provided credentials are incorrect.',
             'password' => 'The provided credentials are incorrect.'
         ]);
-        ;
+        
     }
 
     public function test_user_cannot_login_with_no_credentials(): void
@@ -109,10 +109,10 @@ class LoginTest extends TestCase
             'password' => 'P@ssword2',
         ]);
         $response = $this->loginUserPost('Test_user_5', ' ');
-        $response->assertSessionHasErrors([
+        $response->assertJsonValidationErrors([
             'password' => 'The password field is required.'
         ]);
-        ;
+        
     }
 
     public function test_user_can_generate_remember_me_token(): void
