@@ -53,7 +53,34 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        //
+        $request->validate([
+            'login' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        // check if login is email and find coresponding user else its nickname or just wrong
+
+        $user = filter_var($request->login, FILTER_VALIDATE_EMAIL)
+            ? User::where('email', $request->login)->first()
+            : User::where('nickname', $request->login)->first();
+
+        //password check
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'login' => ['The provided credentials are incorrect.'],
+                'password' => ['The provided credentials are incorrect.'],
+            ]);
+        }
+
+        return response()->json([
+            'user' => $user,
+            'token' => $user->createToken(
+                $request->remember_me ? 'remember_me_access_token' : 'access-token',
+                ['*'],
+                now()->addHour()
+            )
+                ->plainTextToken,
+        ]);
     }
 
     public function logout()
