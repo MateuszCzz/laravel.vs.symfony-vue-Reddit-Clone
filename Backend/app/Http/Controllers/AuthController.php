@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use App\Providers\NicknameProvider;
-use GuzzleHttp\Exception\RequestException;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -56,6 +55,7 @@ class AuthController extends Controller
         $request->validate([
             'login' => 'required|string',
             'password' => 'required|string',
+            'remember_me' => 'boolean',
         ]);
 
         // check if login value is an email 
@@ -84,14 +84,30 @@ class AuthController extends Controller
         ]);
     }
 
-    public function logout()
+    public function logout(Request $request)
     {
-        //
+        $request->user()->currentAccessToken()->delete();
+        return response()->json([
+        ], 205);
     }
 
-    public function logoutAll()
+    public function logoutAll(Request $request)
     {
-        //
+        $request->validate([
+            'password' => 'required|string',
+        ]);
+        $user = $request->user();
+        
+        // password check
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'password' => ['The provided credentials are incorrect.'],
+            ]);
+        }
+
+        $user->tokens()->delete();
+        return response()->json([
+        ], 205);
     }
 
     public function checkNickname(string $nickname)

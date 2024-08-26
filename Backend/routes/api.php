@@ -1,17 +1,21 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
-
-Route::controller(AuthController::class)->prefix('auth')->group(function(){
-    Route::post('register', 'register');
-    Route::post('login', 'login');
-    //Route::post('logout', 'logout');
-    Route::get('check-nickname/{nickname}', 'checkNickname');
-    Route::post('generate-nickname', 'generateNickname');
+// Routes dealing with authentication
+Route::prefix('auth')->group(function () {
+    Route::controller(AuthController::class)->group(function () {
+        Route::post('register', 'register');
+        Route::post('login', 'login');
+        Route::post('logout-all', 'logoutAll')->middleware('auth:sanctum');
+        Route::post('logout', 'logout')->middleware('auth:sanctum');
+        Route::post('generate-nickname', 'generateNickname');
+        Route::get('check-nickname/{nickname}', 'checkNickname');
+    });
 });
+
+
+// Route::get('/user', function (Request $request) {
+//     return $request->user();
+// })
