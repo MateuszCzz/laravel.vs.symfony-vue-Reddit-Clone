@@ -2,45 +2,105 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\User;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-
+use PHPUnit\Framework\Attributes\Test;
 class ResourceAccessTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_user_can_access_protected_resource_with_token(): void
+    private const PROTECTED_ROUTE = '/api/auth/logout';
+    private const SUCCESSFUL_STATUS_PROTECTED = 205;
+    private const NON_PROTECTED_ROUTE = '/api/auth/generate-nickname';
+    private const SUCCESSFUL_STATUS_NON_PROTECTED = 200;
+    private const UNAUTHENTICATED_MESSAGE = 'Unauthenticated.';
+    private const FAILED_AUTHENTICATION_STATUS = 401;
+
+    /**
+     * Make a POST request with a token to a specific route.
+     */
+    private function tokenProtectedPost(string $token, string $route = self::PROTECTED_ROUTE): TestResponse
     {
-        $this->assertTrue(true);
+        return $this->postJson($route, [], [
+            'Authorization' => "Bearer $token",
+        ]);
     }
 
-    public function test_user_cannot_access_protected_resource_with_expired_token(): void
+    /**
+     * Generate a user and an access token.
+     */
+    private function generateUserWithToken(bool $expired = false): array
     {
-        $this->assertTrue(true);
+        $user = User::factory()->create();
+        $expiration = $expired ? now()->subHour() : now()->addHour();
+
+        return [
+            'user' => $user,
+            'token' => $user->createToken('access-token', ['*'], $expiration)->plainTextToken,
+        ];
     }
 
-    public function test_user_cannot_access_protected_resource_with_soft_deleted_token(): void
+    #[Test]
+    public function user_can_access_protected_resource_with_valid_token(): void
     {
-        $this->assertTrue(true);
+        $data = $this->generateUserWithToken();
+        $response = $this->tokenProtectedPost($data['token']);
+
+        $response->assertStatus(self::SUCCESSFUL_STATUS_PROTECTED);
     }
 
-    public function test_user_cannot_access_protected_resource_with_invalid_token(): void
+    #[Test]
+    public function user_cannot_access_protected_resource_with_expired_token(): void
     {
-        $this->assertTrue(true);
+        $data = $this->generateUserWithToken(true);
+        $response = $this->tokenProtectedPost($data['token']);
+
+        $response->assertJson(['message' => self::UNAUTHENTICATED_MESSAGE])
+        ->assertStatus(self::FAILED_AUTHENTICATION_STATUS);
     }
 
-    public function test_user_cannot_access_protected_resource_with_no_token(): void
+    #[Test]
+    public function user_cannot_access_protected_resource_with_invalid_token(): void
     {
-        $this->assertTrue(true);
-    }
-    
-    public function test_user_can_access_non_protected_resource_with_token(): void
-    {
-        $this->assertTrue(true);
+        $response = $this->tokenProtectedPost('invalid_token');
+
+        $response->assertJson(['message' => self::UNAUTHENTICATED_MESSAGE])
+        ->assertStatus(self::FAILED_AUTHENTICATION_STATUS);
     }
 
-    public function test_user_can_access_non_protected_resource_with_no_token(): void
+    #[Test]
+    public function user_cannot_access_protected_resource_without_token(): void
     {
-        $this->assertTrue(true);
+        $response = $this->tokenProtectedPost('');
+
+        $response->assertJson(['message' => self::UNAUTHENTICATED_MESSAGE])
+        ->assertStatus(self::FAILED_AUTHENTICATION_STATUS);
+    }
+
+    #[Test]
+    public function user_can_access_non_protected_resource_with_valid_token(): void
+    {
+        $data = $this->generateUserWithToken();
+        $response = $this->tokenProtectedPost($data['token'], self::NON_PROTECTED_ROUTE);
+
+        $response->assertStatus(self::SUCCESSFUL_STATUS_NON_PROTECTED);
+    }
+
+    #[Test]
+    public function user_can_access_non_protected_resource_without_token(): void
+    {
+        $response = $this->tokenProtectedPost('', self::NON_PROTECTED_ROUTE);
+
+        $response->assertStatus(self::SUCCESSFUL_STATUS_NON_PROTECTED);
+    }
+
+    #[Test]
+    public function user_can_access_non_protected_resource_with_invalid_token(): void
+    {
+        $response = $this->tokenProtectedPost('invalid_token', self::NON_PROTECTED_ROUTE);
+
+        $response->assertStatus(self::SUCCESSFUL_STATUS_NON_PROTECTED);
     }
 }
