@@ -15,7 +15,10 @@ class ResourceAccessTest extends TestCase
     private const SUCCESSFUL_STATUS_PROTECTED = 205;
     private const NON_PROTECTED_ROUTE = '/api/auth/generate-nickname';
     private const SUCCESSFUL_STATUS_NON_PROTECTED = 200;
-    private const UNAUTHENTICATED_MESSAGE = 'Unauthenticated.';
+    private const AUTH_ERROR_MESSAGE = 'Unauthenticated.';
+    private const AUTH_ERROR_MESSAGE_MISSING_TOKEN = 'Unauthenticated - The Token is required.';
+    private const AUTH_ERROR_MESSAGE_EXPIRED_TOKEN = 'Unauthenticated - The token is expired.';
+    private const AUTH_ERROR_MESSAGE_INVALID_TOKEN = 'Unauthenticated - The token is invalid.';
     private const FAILED_AUTHENTICATION_STATUS = 401;
 
     /**
@@ -57,8 +60,8 @@ class ResourceAccessTest extends TestCase
         $data = $this->generateUserWithToken(true);
         $response = $this->tokenProtectedPost($data['token']);
 
-        $response->assertJson(['message' => self::UNAUTHENTICATED_MESSAGE])
-        ->assertStatus(self::FAILED_AUTHENTICATION_STATUS);
+        $response->assertJson(['message' => self::AUTH_ERROR_MESSAGE_EXPIRED_TOKEN])
+            ->assertStatus(self::FAILED_AUTHENTICATION_STATUS);
     }
 
     #[Test]
@@ -66,8 +69,8 @@ class ResourceAccessTest extends TestCase
     {
         $response = $this->tokenProtectedPost('invalid_token');
 
-        $response->assertJson(['message' => self::UNAUTHENTICATED_MESSAGE])
-        ->assertStatus(self::FAILED_AUTHENTICATION_STATUS);
+        $response->assertJson(['message' => self::AUTH_ERROR_MESSAGE_INVALID_TOKEN])
+            ->assertStatus(self::FAILED_AUTHENTICATION_STATUS);
     }
 
     #[Test]
@@ -75,8 +78,8 @@ class ResourceAccessTest extends TestCase
     {
         $response = $this->tokenProtectedPost('');
 
-        $response->assertJson(['message' => self::UNAUTHENTICATED_MESSAGE])
-        ->assertStatus(self::FAILED_AUTHENTICATION_STATUS);
+        $response->assertJson(['message' => self::AUTH_ERROR_MESSAGE_MISSING_TOKEN])
+            ->assertStatus(self::FAILED_AUTHENTICATION_STATUS);
     }
 
     #[Test]
