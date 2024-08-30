@@ -3,6 +3,8 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
+use Illuminate\Testing\TestResponse;
+use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -10,146 +12,152 @@ class LogoutTest extends TestCase
 {
     use RefreshDatabase;
 
-    private function logoutUserPost(string $token, string $password = null, bool $remove_all = false)
+    private const LOGIN_ROUTE = '/api/auth/login';
+    private const LOGOUT_ROUTE = '/api/auth/logout';
+    private const LOGOUT_ALL_ROUTE = '/api/auth/logout-all';
+
+    private const TEST_PASSWORD = 'P@ssword1';
+    private const TEST_NICKNAME = 'test_user_nickname';
+    private const TEST_EMAIL = 'test_user_email@example.com';
+    private const TEST_TOKEN_NAME = 'test_token_name';
+
+    /**
+     * Make a POST request to perform user logout.
+     */
+    private function logoutUserPost(string $token, bool $remove_all = false, string $password = self::TEST_PASSWORD): TestResponse
     {
         $data = [];
-        if ($password !== null && $remove_all == true) {
+        if ($remove_all) {
             $data['password'] = $password;
         }
-        $route = $remove_all ? '/api/auth/logout-all' : '/api/auth/logout';
-        return $this->postJson( $route, $data, [
+
+        $route = $remove_all ? self::LOGOUT_ALL_ROUTE : self::LOGOUT_ROUTE;
+        return $this->postJson($route, $data, [
             'Authorization' => "Bearer $token",
         ]);
     }
 
-    private function loginUserPost()
+    /**
+     * Generate a new user and then Make a POST request to perform login with his data.
+     */
+    private function generateUserWithLoginPost($nickname = self::TEST_NICKNAME, $email = self::TEST_EMAIL, $password = self::TEST_PASSWORD): TestResponse
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'nickname' => $nickname,
+            'email' => $email,
+            'password' => bcrypt($password),
+        ]);
 
-        return $this->postJson('/api/auth/login', [
+        return $this->postJson(self::LOGIN_ROUTE, [
             'login' => $user->nickname,
-            'password' => 'Password1',
+            'password' => $password,
         ]);
     }
 
+    /**
+     * Retrieve the token record for a given user ID.
+     */
+    private function assertTokensInDatabaseByUserId(int $userId, bool $shouldBeInDatabase = true): void
+    {
+        $tokens = \DB::table('personal_access_tokens')
+            ->where('tokenable_id', $userId)
+            ->get();
+        if ($shouldBeInDatabase) {
+            $this->assertNotNull($tokens, 'The token should be in the database.');
+        } else {
+            $this->assertEmpty($tokens, 'The token should be removed from the database.');
+        }
+    }
+
+    #[Test]
     public function test_user_can_remove_their_token(): void
     {
-        $userLoginRequest = $this->loginUserPost();
+        $userLoginRequest = $this->generateUserWithLoginPost();
         $userLoginRequest->assertOk();
 
-        //check if token is in database
         $token = $userLoginRequest->json('token');
         $userId = $userLoginRequest->json('user.id');
-        $tokenRecord = \DB::table('personal_access_tokens')
-            ->where('tokenable_id', $userId)
-            ->first();
-        $this->assertNotNull($tokenRecord, 'The token should be in the database.');
+
+        $this->assertTokensInDatabaseByUserId($userId);
 
         $response = $this->logoutUserPost($token);
         $response->assertStatus(205);
 
-        //check if token is in database
-        $tokenRecord = \DB::table('personal_access_tokens')
-            ->where('tokenable_id', $userId)
-            ->first();
-        $this->assertNull($tokenRecord, 'The token should be removed from the database.');
+        $this->assertTokensInDatabaseByUserId($userId, false);
     }
 
-
+    #[Test]
     public function test_user_can_remove_all_their_tokens(): void
     {
-        $userLoginRequest = $this->loginUserPost();
+        $userLoginRequest = $this->generateUserWithLoginPost();
         $userLoginRequest->assertOk();
         $userId = $userLoginRequest->json('user.id');
 
-        //create second token
-        User::find($userLoginRequest->json('user.id'))->createToken('token_2_test');
+        User::find($userId)->createToken(self::TEST_TOKEN_NAME);
 
-        $response = $this->logoutUserPost($userLoginRequest->json('token'), 'Password1', true);
+        $this->assertTokensInDatabaseByUserId($userId);
+
+        $response = $this->logoutUserPost($userLoginRequest->json('token'), true);
         $response->assertStatus(205);
-        $tokens = \DB::table('personal_access_tokens')->where('tokenable_id', $userId)->get();
 
-        // Verify that no tokens are left in the database
-        $tokens = \DB::table('personal_access_tokens')
-            ->where('tokenable_id', $userId)
-            ->get();
-        $this->assertEmpty($tokens, 'All tokens should be removed from the database.');
-
+        $this->assertTokensInDatabaseByUserId($userId, false);
     }
 
+    #[Test]
     public function test_user_removes_only_their_tokens_when_removing_all_tokens(): void
     {
-        $user1LoginRequest = $this->loginUserPost();
-        $user2LoginRequest = $this->loginUserPost();
+        $user1LoginRequest = $this->generateUserWithLoginPost();
+        $user2LoginRequest = $this->generateUserWithLoginPost(self::TEST_TOKEN_NAME . '2', '2' . self::TEST_EMAIL);
         $user1Id = $user1LoginRequest->json('user.id');
+        $user2Id = $user2LoginRequest->json('user.id');
 
-        User::find($user1Id)->createToken('token_2_test');
+        User::find($user1Id)->createToken(self::TEST_TOKEN_NAME);
 
-        $response = $this->logoutUserPost($user1LoginRequest->json('token'), 'Password1', true);
+        $this->assertTokensInDatabaseByUserId($user1Id);
+        $this->assertTokensInDatabaseByUserId($user2Id);
+
+        $response = $this->logoutUserPost($user1LoginRequest->json('token'), true);
         $response->assertStatus(205);
 
-        // Verify that all user1 tokens are removed
-        $tokens = \DB::table('personal_access_tokens')
-            ->where('tokenable_id', $user1Id)
-            ->get();
-        $this->assertEmpty($tokens, 'All tokens should be removed from the database.');
-
-        // Verify that user2 token have not
-        $user2Token = \DB::table('personal_access_tokens')
-            ->where('tokenable_id', $user2LoginRequest->json('user.id'))
-            ->get()->first();
-        $this->assertNotNull($user2Token, 'The token should not be removed.');
+        $this->assertTokensInDatabaseByUserId($user1Id, false);
+        $this->assertTokensInDatabaseByUserId($user2Id);
     }
 
+    #[Test]
     public function test_user_cannot_remove_all_their_tokens_with_incorrect_credentials(): void
     {
-        $userLoginRequest = $this->loginUserPost();
+        $userLoginRequest = $this->generateUserWithLoginPost();
         $userLoginRequest->assertOk();
 
-        //check if token is in database
         $token = $userLoginRequest->json('token');
         $userId = $userLoginRequest->json('user.id');
-        $tokenRecord = \DB::table('personal_access_tokens')
-            ->where('tokenable_id', $userId)
-            ->first();
-        $this->assertNotNull($tokenRecord, 'The token should be in the database.');
 
-        $response = $this->logoutUserPost($token, 'Password2', true);
+        $this->assertTokensInDatabaseByUserId($userId);
+
+        $response = $this->logoutUserPost($token, true, self::TEST_PASSWORD . 'error');
         $response->assertJsonValidationErrors([
             'password' => ['The provided credentials are incorrect.'],
         ]);
 
-        //check if token is in database
-        $tokenRecord = \DB::table('personal_access_tokens')
-            ->where('tokenable_id', $userId)
-            ->first();
-        $this->assertNotNull($tokenRecord, 'The token should not be removed from the database.');
+        $this->assertTokensInDatabaseByUserId($userId);
     }
 
-    public function test_user_cannot_remove_all_their_tokens_with_no_credentials(): void
+    #[Test]
+    public function test_user_cannot_remove_all_their_tokens_without_credentials(): void
     {
-        $userLoginRequest = $this->loginUserPost();
+        $userLoginRequest = $this->generateUserWithLoginPost();
         $userLoginRequest->assertOk();
 
-        //check if token is in database
         $token = $userLoginRequest->json('token');
         $userId = $userLoginRequest->json('user.id');
-        $tokenRecord = \DB::table('personal_access_tokens')
-            ->where('tokenable_id', $userId)
-            ->first();
-        $this->assertNotNull($tokenRecord, 'The token should be in the database.');
 
-        $response = $this->logoutUserPost($token, '', true);
+        $this->assertTokensInDatabaseByUserId($userId);
+
+        $response = $this->logoutUserPost($token, true, '');
         $response->assertJsonValidationErrors([
             'password' => ['The password field is required.'],
         ]);
 
-        //check if token is in database
-        $tokenRecord = \DB::table('personal_access_tokens')
-            ->where('tokenable_id', $userId)
-            ->first();
-        $this->assertNotNull($tokenRecord, 'The token should not be removed from the database.');
+        $this->assertTokensInDatabaseByUserId($userId);
     }
-
-    //TODO: implement refresh tokens and deal with them on logout too or implement cascade 
 }
