@@ -1,5 +1,6 @@
 <?php
 
+use App\Enum\TokenAbility;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -8,8 +9,8 @@ Route::prefix('auth')->group(function () {
     Route::controller(AuthController::class)->group(function () {
         Route::post('register', 'register');
         Route::post('login', 'login');
-        Route::post('logout-all', 'logoutAll')->middleware('auth:sanctum');
-        Route::post('logout', 'logout')->middleware('auth:sanctum');
+        Route::post('logout-all', 'logoutAll')->middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]);
+        Route::post('logout', 'logout')->middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]);
         Route::post('generate-nickname', 'generateNickname');
         Route::get('check-nickname/{nickname}', 'checkNickname');
     });
