@@ -2,105 +2,101 @@
 
 namespace Tests\Feature\Auth;
 
-use App\Models\User;
+use App\Enum\TokenName;
 use Carbon\Carbon;
+use Tests\Feature\Traits\authHelper;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Testing\TestResponse;
 use PHPUnit\Framework\Attributes\Test;
 
 class LoginTest extends TestCase
 {
-    use RefreshDatabase;
+    use RefreshDatabase, authHelper;
 
-    private const LOGIN_ROUTE = '/api/auth/login';
-
-    private const TEST_PASSWORD = 'P@ssword1';
-    private const TEST_NICKNAME = 'test_user_nickname';
-    private const TEST_EMAIL = 'test_user_email@example.com';
-    private const TEST_TOKEN_NAME = 'test_token_name';
-
-    /**
-     * Generate a new user.
-     */
-    private function generateUser($nickname = self::TEST_NICKNAME, $email = self::TEST_EMAIL, $password = self::TEST_PASSWORD): User
-    {
-        return User::factory()->create([
-            'nickname' => $nickname,
-            'email' => $email,
-            'password' => $password,
-        ]);
-    }
-
-    /**
-     *  Make a POST request to perform login with user data.
-     */
-    private function loginUserPost($loginWithNickname = true, $nickname = self::TEST_NICKNAME, $email = self::TEST_EMAIL, $password = self::TEST_PASSWORD, $rememberMe = false): TestResponse
-    {
-        return $this->postJson(self::LOGIN_ROUTE, [
-            'login' => $loginWithNickname ? $nickname : $email,
-            'password' => $password,
-            'remember_me' => $rememberMe,
-        ]);
-    }
+    private const SUCCESSFUL_LOGIN_STATUS = 200;
 
     #[Test]
     public function test_user_can_login_with_nickname(): void
     {
-        $this->generateUser();
+        $this->createUser();
         $this->loginUserPost()
-            ->assertJsonStructure([
-                'user' => ['id', 'nickname', 'email'],
-                'token',
-            ]);
+            ->assertJsonStructure(self::SUCCESSFUL_AUTH_JSON_STRUCTURE)
+            ->assertStatus(self::SUCCESSFUL_LOGIN_STATUS);
     }
 
     #[Test]
     public function test_user_can_login_with_email(): void
     {
-        $this->generateUser();
+        $this->createUser();
         $this->loginUserPost(false)
-            ->assertJsonStructure([
-                'user' => ['id', 'nickname', 'email'],
-                'token',
-            ]);
+            ->assertJsonStructure(self::SUCCESSFUL_AUTH_JSON_STRUCTURE)
+            ->assertStatus(self::SUCCESSFUL_LOGIN_STATUS);
     }
 
     #[Test]
     public function test_successful_login_creates_new_token_in_database(): void
     {
-        $this->generateUser();
+        $this->createUser();
         $response = $this->loginUserPost();
 
-        $this->assertDatabaseHas('personal_access_tokens', [
-            'tokenable_id' => $response->json('user.id'),
-            'tokenable_type' => 'App\\Models\\User',
-            'name' => 'access-token',
-        ]);
+        $this->assertEquals(
+            1,
+            $this->findUserTokens($response->json('user.id'))->count(),
+            'Token should exist.'
+        );
     }
 
     #[Test]
-    public function test_generated_tokens_are_time_limited(): void
+    public function test_created_tokens_are_properly_time_limited(): void
     {
-        $this->generateUser();
+        $this->createUser();
         $response = $this->loginUserPost();
 
-        $token = \DB::table('personal_access_tokens')->where('tokenable_id', $response->json('user.id'))->first();
-        $this->assertNotNull($token->expires_at, 'The token should have an expiration time set.');
+        $token = $this->findUserTokens($response->json('user.id'))
+            ->first();
 
-        $expiresAt = Carbon::parse($token->expires_at);
-        $this->assertTrue($expiresAt->lessThanOrEqualTo(Carbon::now()->addHour()), 'The token should expire within 1 hour.');
+        $accessTokenExpiration = config('sanctum.ac_expiration');
+        if (is_null($accessTokenExpiration)) {
+            $this->assertNull($token->expires_at, 'Token should never expire.');
+        } else {
+            $expiresAt = Carbon::parse($token->expires_at);
+            $this->assertTrue(
+                $expiresAt->lessThanOrEqualTo(Carbon::now()->addMinutes($accessTokenExpiration)),
+                'The token should expire within configured time.'
+            );
+        }
     }
 
     #[Test]
-    public function test_user_cannot_login_with_unregistered_nickname_or_email(): void
+    public function test_user_can_generate_remember_me_token(): void
     {
-        $this->loginUserPost(false, self::TEST_NICKNAME, self::TEST_EMAIL . '2')->assertJsonValidationErrors([
-            'login' => 'The provided credentials are incorrect.',
-            'password' => 'The provided credentials are incorrect.'
-        ]);
+        $this->createUser();
+        $response = $this->loginUserPost(rememberMe: true)
+            ->assertJsonStructure(self::SUCCESSFUL_AUTH_JSON_STRUCTURE)
+            ->assertStatus(self::SUCCESSFUL_LOGIN_STATUS);
 
-        $this->loginUserPost(true, self::TEST_NICKNAME . '2')
+        $this->assertEquals(
+            1,
+            $this->findUserTokens(
+                $response->json('user.id'),
+                TokenName::REMEMBER_ME_ACCESS_TOKEN->value
+            )->count(),
+            'Token should exist.'
+        );
+    }
+
+    #[Test]
+    public function test_user_cannot_login_with_unregistered_credentials(): void
+    {
+        $this->loginUserPost(false, email: self::USER_EMAIL . 'error')
+            ->assertStatus(self::VALIDATION_ERROR_STATUS)
+            ->assertJsonValidationErrors([
+                'login' => 'The provided credentials are incorrect.',
+                'password' => 'The provided credentials are incorrect.'
+            ]);
+
+        $this->loginUserPost(nickname: self::USER_NICKNAME . 'error')
+            ->assertStatus(self::VALIDATION_ERROR_STATUS)
             ->assertJsonValidationErrors([
                 'login' => 'The provided credentials are incorrect.',
                 'password' => 'The provided credentials are incorrect.'
@@ -110,41 +106,31 @@ class LoginTest extends TestCase
     #[Test]
     public function test_user_cannot_login_with_incorrect_credentials(): void
     {
-        $this->generateUser();
-        $this->loginUserPost(true, self::TEST_NICKNAME . '2')
+        $this->createUser();
+        $this->loginUserPost(false, email: self::USER_EMAIL . 'error')
+            ->assertStatus(self::VALIDATION_ERROR_STATUS)
             ->assertJsonValidationErrors([
                 'login' => 'The provided credentials are incorrect.',
                 'password' => 'The provided credentials are incorrect.'
             ]);
 
+        $this->loginUserPost(nickname: self::USER_NICKNAME . 'error')
+            ->assertStatus(self::VALIDATION_ERROR_STATUS)
+            ->assertJsonValidationErrors([
+                'login' => 'The provided credentials are incorrect.',
+                'password' => 'The provided credentials are incorrect.'
+            ]);
     }
 
     #[Test]
-    public function test_user_cannot_login_without_credentials(): void
+    public function test_user_cannot_login_without_password(): void
     {
-        $this->generateUser();
-        $this->loginUserPost(true, self::TEST_NICKNAME, self::TEST_EMAIL, '')
+        $this->createUser();
+        $this->loginUserPost(password: '')
+            ->assertStatus(self::VALIDATION_ERROR_STATUS)
             ->assertJsonValidationErrors([
                 'password' => 'The password field is required.'
             ]);
-
-    }
-
-    #[Test]
-    public function test_user_can_generate_remember_me_token(): void
-    {
-        $this->generateUser();
-        $response = $this->loginUserPost(true, self::TEST_NICKNAME, self::TEST_EMAIL, self::TEST_PASSWORD, true)
-            ->assertJsonStructure([
-                'user' => ['id', 'nickname', 'email'],
-                'token',
-            ]);
-
-        $this->assertDatabaseHas('personal_access_tokens', [
-            'tokenable_id' => $response->json('user.id'),
-            'tokenable_type' => 'App\\Models\\User',
-            'name' => 'remember_me_access_token'
-        ]);
     }
 
     // TODO: Implement mailing system
