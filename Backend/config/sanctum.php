@@ -44,9 +44,17 @@ return [
     | considered expired. This will override any values set in the token's
     | "expires_at" attribute, but first-party sessions are not affected.
     |
+    | 'ac_expiration' attribute sets the expiration of access tokens, 
+    |       on default set to 60 minutes.
+    | 'rf_expiration' attribute sets the expiration of tokens used to 
+    |       refresh ac tokens, on default set to a week.
+    | 'remember_me_rf_expiration' attribute sets the expiration of refresh tokens,
+    |       when the main token is of remember_me type, on default set to forever.
     */
-
-    'expiration' => null,
+    'expiration' => 60,
+    'ac_expiration' => 60,
+    'rf_expiration' => 7 * 24 * 60,
+    'remember_me_rf_expiration' => null,
 
     /*
     |--------------------------------------------------------------------------
