@@ -37,7 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 // Choose error message
                 $message = match (true) {
                     !$token => 'Unauthenticated - The Token is required.',
-                    !$accessToken => 'Unauthenticated - The token is invalid.',
+                    !$accessToken => 'Unauthenticated.',
                     Carbon::parse($accessToken->expires_at)->isPast() => 'Unauthenticated - The token is expired.',
                     default => 'Unauthenticated.'
                 };
