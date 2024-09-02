@@ -9,8 +9,15 @@ Route::prefix('auth')->group(function () {
     Route::controller(AuthController::class)->group(function () {
         Route::post('register', 'register');
         Route::post('login', 'login');
-        Route::post('logout-all', 'logoutAll')->middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]);
-        Route::post('logout', 'logout')->middleware(['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]);
+        Route::post('logout-all', 'logoutAll')->middleware(
+            ['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
+        );
+        Route::post('logout', 'logout')->middleware(
+            ['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
+        );
+        Route::post('refresh-token', 'refreshToken')->middleware(
+            ['auth:sanctum', 'ability:' . TokenAbility::REFRESH_EXPIRATION->value]
+        );
         Route::post('generate-nickname', 'generateNickname');
         Route::get('check-nickname/{nickname}', 'checkNickname');
     });
