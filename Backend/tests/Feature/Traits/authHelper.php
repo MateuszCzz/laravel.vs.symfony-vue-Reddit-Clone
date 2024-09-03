@@ -37,6 +37,9 @@ trait authHelper
     private const USER_PASSWORD = 'P@ssword1';
     private const USER_NICKNAME = 'test_user_nickname';
     private const USER_EMAIL = 'test_user_email@example.com';
+    private const TEST_NICKNAME_SHORT = 'te';
+    private const TEST_NICKNAME_LONG = 'test_user_nickname_that_is_too_long';
+    private const TEST_NICKNAME_SPECIAL_CHARACTERS = 'test_user_nickname$#';
 
     /**
      * Generate a new user.
