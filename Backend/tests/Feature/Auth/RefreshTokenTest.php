@@ -16,7 +16,6 @@ class RefreshTokenTest extends TestCase
     use RefreshDatabase, authHelper;
     
     private const SUCCESSFUL_REFRESH_STATUS = 200;
-    private const REFRESH_TOKEN_ROUTE = '/api/auth/refresh-token';
 
     public static function tokenDataProvider(): array
     {
@@ -54,7 +53,6 @@ class RefreshTokenTest extends TestCase
         $this->assertEquals(1, $newToken->count(), 'Only one token should exist.');
         $this->assertNotEquals($oldToken->id, $newToken->first()->id, 'The token should have been replaced.');
     }
-
 
     /**
      * Generate a new access token for the given user.

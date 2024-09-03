@@ -15,6 +15,7 @@ trait authHelper
     private const LOGOUT_ROUTE = '/api/auth/logout';
     private const LOGOUT_ALL_ROUTE = '/api/auth/logout-all';
     private const CHECK_NICKNAME_ROUTE = '/api/auth/check-nickname/';
+    private const REFRESH_TOKEN_ROUTE = '/api/auth/refresh-token';
 
     // Status codes:
     private const VALIDATION_ERROR_STATUS = 422;
