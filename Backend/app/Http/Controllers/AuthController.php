@@ -15,13 +15,6 @@ use Illuminate\Validation\Rules\Password;
 use Faker\Generator as Faker;
 use Laravel\Sanctum\PersonalAccessToken;
 
-/**
- * @OA\Info(
- *     title="Reddit based API",
- *     version="1.0.0",
- *     description="API documentation for my application",
- * )
- */
 class AuthController extends Controller
 {
     /**
