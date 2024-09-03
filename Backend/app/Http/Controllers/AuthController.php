@@ -124,6 +124,34 @@ class AuthController extends Controller
         ], 205);
     }
 
+
+    public function logoutAllCredentials(Request $request): JsonResponse
+    {
+        $request->validate([
+            'login' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        // check if login value is an email
+        // If so, find corresponding user by their email
+        // else attempt to find a user by their nickname
+        $user = filter_var($request->login, FILTER_VALIDATE_EMAIL)
+            ? User::where('email', $request->login)->first()
+            : User::where('nickname', $request->login)->first();
+
+        // password check
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            throw ValidationException::withMessages([
+                'login' => ['The provided credentials are incorrect.'],
+                'password' => ['The provided credentials are incorrect.'],
+            ]);
+        }
+
+        $user->tokens()->delete();
+        return response()->json([
+        ], 205);
+    }
+
     public function checkNickname(string $nickname): JsonResponse
     {
         $validator = \Validator::make(['nickname' => $nickname], [
