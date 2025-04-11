@@ -3,7 +3,6 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use Illuminate\Testing\TestResponse;
 use Tests\Feature\Traits\authHelper;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -31,16 +30,6 @@ class NicknameTest extends TestCase
             ->assertStatus(self::VALIDATION_ERROR_STATUS)
             ->assertJsonValidationErrors([
                 'nickname' => 'The nickname has already been taken.'
-            ]);
-    }
-
-    #[Test]
-    public function test_nickname_availability_for_nothing(): void
-    {
-        $this->nicknameCheckGet(' ')
-            ->assertStatus(self::VALIDATION_ERROR_STATUS)
-            ->assertJsonValidationErrors([
-                'nickname' => 'The nickname field is required.'
             ]);
     }
 

@@ -7,6 +7,7 @@ use App\Enum\TokenName;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Testing\TestResponse;
+use Illuminate\Support\Facades\DB;
 
 trait authHelper
 {
@@ -68,10 +69,9 @@ trait authHelper
      * @param bool $isRememberMe Whether remember-me token should be created.
      * @return string|array The access token in plain text format or the token model.
      */
-    private function createAccessToken(User $user = null, bool $isExpired = false, bool $toReturnPlainToken = true, bool $isRememberMe = false): string|array
+    private function createAccessToken(?User $user = null, bool $isExpired = false, bool $toReturnPlainToken = true, bool $isRememberMe = false): string|array
     {
-        if ($user === null)
-            $user = User::factory()->create();
+        $user ??= User::factory()->create();
 
         $plainTextToken = $user->generateTokenString();
         $token = $user->tokens()->create([
@@ -133,7 +133,7 @@ trait authHelper
      * @param string|null $token the authorization token to be included in the request header.
      * @return \Illuminate\Testing\TestResponse The response from the nickname-check request.
      */
-    private function nicknameCheckGet(string $nickname = self::USER_NICKNAME, string $token = null): TestResponse
+    private function nicknameCheckGet(string $nickname = self::USER_NICKNAME, ?string $token = null): TestResponse
     {
         return $this->getJson(self::CHECK_NICKNAME_ROUTE . $nickname, [
             'Authorization' => "Bearer $token",
@@ -150,7 +150,7 @@ trait authHelper
      */
     private function findUserTokens(int $userId, string $tokenName = TokenName::ACCESS_TOKEN->value): Collection
     {
-        return \DB::table('personal_access_tokens')
+        return DB::table('personal_access_tokens')
             ->where([
                 ['tokenable_id', '=', $userId],
                 ['name', '=', $tokenName],
