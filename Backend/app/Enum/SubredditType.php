@@ -2,10 +2,10 @@
 
 namespace App\Enum;
 
-enum SubredditStatus: string {
+enum SubredditType: string {
     case PUBLIC = 'PUBLIC';
     case PRIVATE = 'PRIVATE';
-    case RESTRICTED = 'RESTRICTED';
+    // case RESTRICTED = 'RESTRICTED';
 
     public static function toArray(): array
     {

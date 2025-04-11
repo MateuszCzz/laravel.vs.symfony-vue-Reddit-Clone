@@ -1,6 +1,6 @@
 <?php
 
-use App\Enum\SubredditStatus;
+use App\Enum\SubredditType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('name', 21)->unique();
             $table->string('description', 500)->nullable();
-            $table->enum('status', SubredditStatus::toArray())->default(SubredditStatus::PUBLIC->value);
+            $table->enum('status', SubredditType::toArray())->default(SubredditType::PUBLIC->value);
             $table->boolean('send_welcome_message')->default(false);
             $table->text('welcome_message_text')->nullable();
             $table->boolean('is_nsfw')->default(false);

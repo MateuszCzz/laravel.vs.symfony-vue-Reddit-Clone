@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Enum\SubredditStatus;
+use App\Enum\SubredditType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -18,7 +18,7 @@ class Subreddit extends Model
     ];
 
     protected $casts = [
-        'status' => SubredditStatus::class,
+        'status' => SubredditType::class,
         'send_welcome_message' => 'boolean',
         'is_nsfw' => 'boolean',
     ];
