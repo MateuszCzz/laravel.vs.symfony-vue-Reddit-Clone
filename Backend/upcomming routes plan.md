@@ -1,65 +1,79 @@
 ## Subreddit Entity
 
-**id** (integer, read-only)  
-- The unique identifier of the subreddit.
+### Attributes
 
-**name** (string, required)  
-- The name of the subreddit. Must be between 3 and 21 characters long, also identifier visible to users.
+- **id** (integer, read-only)  
+  Unique identifier for the subreddit.
 
-**description** (string, optional)  
-- A brief description of the subreddit. Must be between 0 and 500 characters long.
+- **name** (string, required, unique)  
+  The name of the subreddit (3 to 21 characters long), visible to users.
 
-**status** (Enum, required)  
-- The status of the subreddit. Values: `public`, `private`, `restricted`.
+- **description** (string, optional)  
+  A brief description of the subreddit (0 to 500 characters long).
 
-**isNsfw** (boolean, optional)  
-- Whether the subreddit is marked as NSFW (Not Safe for Work).
+- **subredditType** (Enum, required)  
+  The status of the subreddit. Possible values:
+  - `public`
+  - `private`
+  (Later)- `restricted` (Anyone can view; only approved members can post/comment, depending on settings)
+  (Later)- `premium-only` (Only Premium members can post; community can only be set as Premium-only at creation; anyone can moderate a Premium-only community, even non-Premium members)
 
-**AmountOfMembers** (integer, read-only)  
-- The number of members in the subreddit.
+- **bitApprovalSettings** (bitwise flag, int)(Later)  
+  Indicates whether the entity should await approval. Possible values:
+  - 1 -> members
+  - 2 -> posts
+  - 4 -> comments
 
-**DoNewNeedsApproval** (bitwise flag, int)  
-- Whether given entity should await approval. [1 -> members, 2 -> posts, 4 -> comments]
+- **bitAllowedPostTypes** (bitwise flag, int)  
+  Specifies the types of posts allowed. Possible values:
+  - 1 -> Text
+  (Later)- 2 -> Image
+  - 4 -> Link
+  (Later)- 8 -> Repost
 
-**AllowedPostTypes** (bitwise flag, int)  
-- What type of posts are allowed. [1 -> Text, 2 -> Image, 4 -> Link, 8 -> Repost]
+- **bitStatus** (bitwise flag, int)  
+  Current status of the subreddit. Possible values:
+  - 1 -> is_nsfw
+  - 2 -> is_locked
+  - ...
 
-**CreatorId** (User, read-only)
-- The creator of the subreddit.
+- **tags** (bitwise flag, int)  (Later)
+  List of topics the subreddit covers.
 
-**CreatedAt** (datetime, read-only)  
-- The date and time when the subreddit was created.
+- **AmountOfMembers** (integer, read-only) (Later) 
+  The number of members in the subreddit.
 
-**UpdatedAt** (datetime, read-only)  
-- The date and time when the subreddit was last updated.
+- **CreatorId** (User , read-only)  
+  The creator of the subreddit.
+
+- **CreatedAt** (datetime, read-only)  
+  The date and time when the subreddit was created.
+
+- **UpdatedAt** (datetime, read-only)  
+  The date and time when the subreddit was last updated.
 
 ---
 
-### Endpoints:
+### Endpoints
 
 1. **Get Lists**
-   - **GET:** `api/search/?type=subreddit`  
-     Search subreddits by title and description.
-   - **GET:** `api/subreddits/{where}`  
-     The `where` parameter determines the order in which the subreddits are displayed.
-     - `api/subreddits/popular` - Ordered by `popularity`, for now amount of members.
-     - `api/subreddits/new` - Ordered by creation time (`createdAt`), newest first.
+   - **GET:** `api/subreddits/?q=_&sort=_` (Later &sort=_) 
+     Search subreddits by title and description ((Later) different sorting options than date).
 
 2. **Get Single Element**
-   - **GET:** `api/{subredditName}/about`  
-     Provides full information about a specific subreddit.
-   - **GET:** `api/{subredditName}/settings` | **auth: creator**  
-     Provides full settings for the subreddit.
+   - **GET:** `/api/subreddits/{subredditName}/`  
+     Provides full public information about a specific subreddit.  
+     **auth:** creator (provides full settings for the subreddit even when private).
 
 3. **Patch**
-   - **PATCH:** `api/{subredditName}/settings` | **auth: creator**  
+   - **PATCH:** `api/subreddits/{subredditName}/`  
+     **auth:** creator  
      Updates the settings of the subreddit.
 
 4. **Create**
-   - **POST:** `api/subreddits/create` | **auth: user**  
+   - **POST:** `api/subreddits/`  
+     **auth:** user  
      Creates a new subreddit.
-
----
 
 ## Article Entity
 
@@ -70,28 +84,17 @@
 - Article ID string identifier visible to users.
 
 **title**  
-- Article title.
-
-**isApproved**  
-- Boolean indicating if the article is public.
-
-**isNsfw**  
-- Whether the article is NSFW.
-
-**isSpoiler**  
-- Whether the article is a spoiler.
-
-**isLocked**  
-- Whether the article is locked.
-
-**isArchived**  
-- Whether the article is archived.
+- Article title. 1-300
 
 **contentType**  
-- Type of content. Possible values: `Text`, `Image`, `Link`, `Repost`.
+- Type of content. Possible values: `Text`,  `Link`. 
+(later) `Image`, `Repost`.
 
 **content**  
-- The content of the article (string).
+- The content of the article (string). 0-40000
+
+**bitStatus** (bitwise flag, int)  
+- Current status of given Article. [1 -> is_approved, 2 -> is_locked, 4 -> is_nsfw, 5 -> is_archived]
 
 **SubredditId**  
 - Relational connection to the containing Subreddit.
@@ -113,7 +116,7 @@
 ### Endpoints:
 
 1. **Get Lists**
-   - **GET:** `api/search/?type=post`  
+   - **GET:** `api/search/?q=_&type=post&sort=_`
      Search posts by title or content, with sorting.
    - **GET:** `api/home-feed/{sort}`  
      Global feed visible from user-joined subreddits.
@@ -155,14 +158,8 @@
 3. **content** (string, required)  
    - The content of the comment. Must be between 3 and 4000 characters long.
 
-4. **isApproved** (boolean, optional)  
-   - Whether the comment is approved.
-
-5. **isOP** (boolean, optional)  
-   - Indicates if the comment was made by an article creator.
-
-6. **isSubCreator** (boolean, optional)  
-   - Indicates if the comment was made by a subreddit creator. //in future might imply mod
+**bitStatus** (bitwise flag, int)  
+- Current status of given Article. [1 -> is_approved, 2 -> is_locked, 4 -> is_creator, 5 -> is_subreddit_creator]
 
 7. **parentCommentId** (self-reference, optional)  
    - The parent comment, if this comment is a reply.
@@ -187,7 +184,7 @@
 ### Endpoints:
 
 1. **Get Lists**
-   - **GET:** `api/search/?type=comment`  
+   - **GET:** `api/search/?q=_&comment=post&sort=_`  
      Search comments by content.
    - **GET:** `{subredditName}/{ArticleStringId}/comments`  
      Retrieves a collection of comments with pagination (25 items per page).
@@ -222,11 +219,8 @@
 3. **Subreddit** (Subreddit, required)  
    - The subreddit that the user has joined. Represents the many-to-one relationship with the `Subreddit` entity.
 
-4. **isApproved** (boolean, required)  
-   - Indicates whether the user's membership is approved.
-
-<!-- 4. **isMod** (boolean, required)  
-   - Indicates whether the user is a moderator. -->
+**bitStatus** (bitwise flag, int)  
+- Current status of given Article. [1 -> is_approved, 2 -> is_mod, ...]
 
 5. **createdAt** (datetime, read-only)  
    - The date and time when the membership was created.
@@ -263,8 +257,11 @@
 **id** (integer, read-only)  
 - The unique identifier of the user.
 
-**nickname** (string, optional)  
-- The display name of the user.
+**nickname** (string)  
+- The login and shown name of the user.
+
+**displayName** (string, optional)  
+- User name shown on his profile page.
 
 **email** (string, optional)  
 - The email address of the user. Must be a valid email format.
@@ -292,7 +289,7 @@
 ### Endpoints:
 
 1. **Get Lists**
-   - **GET:** `api/search/?type=user`  
+   - **GET:** `api/search/?q=_&user=post&sort=_`  
      Search users by nickname.
    - **GET:** `api/user/{userNickname}/submitted/`  
      Get a list of articles made by the user. Parameters: `sort: Top, New`; `time` (time frame for top).
