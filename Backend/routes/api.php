@@ -5,8 +5,9 @@ use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
 // Routes dealing with authentication
-Route::prefix('auth')->group(function () {
-    Route::controller(AuthController::class)->group(function () {
+Route::prefix('auth')
+    ->controller(AuthController::class)
+    ->group(function () {
         // Token creation routes:
         Route::post('register', 'register');
         Route::post('login', 'login');
@@ -23,11 +24,10 @@ Route::prefix('auth')->group(function () {
         );
         Route::post('logout-all-credentials', 'logoutAllCredentials');
 
-        //Nickname routes:
+        // Nickname routes:
         Route::post('generate-nickname', 'generateNickname');
         Route::get('check-nickname/{nickname}', 'checkNickname');
     });
-});
 
 
 // Route::get('/user', function (Request $request) {
