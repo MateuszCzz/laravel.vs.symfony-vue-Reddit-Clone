@@ -3,14 +3,14 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use Tests\Feature\Traits\authHelper;
+use Tests\Feature\Traits\AuthHelper;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 
 class NicknameTest extends TestCase
 {
-    use RefreshDatabase, authHelper;
+    use RefreshDatabase, AuthHelper;
 
     private const GENERATE_NICKNAME_ROUTE = '/api/auth/generate-nickname';
 

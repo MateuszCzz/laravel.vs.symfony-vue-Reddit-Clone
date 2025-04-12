@@ -4,14 +4,14 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use Illuminate\Testing\TestResponse;
-use Tests\Feature\Traits\authHelper;
+use Tests\Feature\Traits\AuthHelper;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 
 class RegistrationTest extends TestCase
 {
-    use RefreshDatabase, authHelper;
+    use RefreshDatabase, AuthHelper;
 
     private const REGISTER_ROUTE = '/api/auth/register';
     private const SUCCESSFUL_REGISTER_STATUS = 201;

@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Testing\TestResponse;
 use Illuminate\Support\Facades\DB;
 
-trait authHelper
+trait AuthHelper
 {
     // Routes:
     private const LOGIN_ROUTE = '/api/auth/login';

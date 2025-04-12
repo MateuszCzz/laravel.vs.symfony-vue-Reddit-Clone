@@ -7,13 +7,13 @@ use Carbon\Carbon;
 use Laravel\Sanctum\PersonalAccessToken;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\Feature\Traits\authHelper;
+use Tests\Feature\Traits\AuthHelper;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Illuminate\Testing\TestResponse;
 class RefreshTokenTest extends TestCase
 {
-    use RefreshDatabase, authHelper;
+    use RefreshDatabase, AuthHelper;
     
     private const SUCCESSFUL_REFRESH_STATUS = 200;
 

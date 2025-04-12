@@ -4,13 +4,13 @@ namespace Tests\Feature\Auth;
 
 use App\Models\User;
 use PHPUnit\Framework\Attributes\Test;
-use Tests\Feature\Traits\authHelper;
+use Tests\Feature\Traits\AuthHelper;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class LogoutTest extends TestCase
 {
-    use RefreshDatabase, authHelper;
+    use RefreshDatabase, AuthHelper;
 
     private const LOGOUT_ALL_CREDENTIALS_ROUTE = '/api/auth/logout-all-credentials';
 

@@ -2,13 +2,13 @@
 
 namespace Tests\Feature\Auth;
 
-use Tests\Feature\Traits\authHelper;
+use Tests\Feature\Traits\AuthHelper;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 class ResourceAccessTest extends TestCase
 {
-    use RefreshDatabase, authHelper;
+    use RefreshDatabase, AuthHelper;
 
     //TODO: once implemented change route from logout
     private const FAILED_TOKEN_AUTH_STATUS = 401;

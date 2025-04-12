@@ -4,14 +4,14 @@ namespace Tests\Feature\Auth;
 
 use App\Enum\TokenName;
 use Carbon\Carbon;
-use Tests\Feature\Traits\authHelper;
+use Tests\Feature\Traits\AuthHelper;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 
 class LoginTest extends TestCase
 {
-    use RefreshDatabase, authHelper;
+    use RefreshDatabase, AuthHelper;
 
     private const SUCCESSFUL_LOGIN_STATUS = 200;
 
