@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->string('title', 300);
             $table->text('content')->nullable();
-            $table->enum('type', PostType::toArray());
+            $table->enum('type', PostType::values());
             $table->boolean('is_approved')->default(true);//TODO
             $table->boolean('is_nsfw')->default(false);
             $table->boolean('is_spoiler')->default(false);
