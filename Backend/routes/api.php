@@ -33,10 +33,15 @@ Route::prefix('auth')
 Route::prefix('subreddits')
     ->controller(SubredditController::class)
     ->group(function () {
-        Route::post('/', 'store')->middleware(
-            ['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
-        );
+
+        // Public routes
+    
+        // Authenticated routes
+        Route::middleware([
+            'auth:sanctum',
+            'ability:' . TokenAbility::ACCESS_API->value
+        ])->group(function () {
+            Route::get('/check-name/{name}', 'checkName');
+            Route::post('/', 'store');
+        });
     });
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })

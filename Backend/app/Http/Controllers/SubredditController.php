@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Enum\SubredditType;
 use App\Models\Membership;
 use App\Models\Subreddit;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Validator;
 
 class SubredditController extends Controller
 {
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         // Validate input
         $validated = $request->validate([
@@ -40,5 +42,27 @@ class SubredditController extends Controller
             'membership' => $membership
         ], 201);
 
+    }
+    //rest
+
+
+    public function checkName(string $name): JsonResponse
+    {
+        $validator = Validator::make(['name' => $name], [
+            'name' => 'required|alpha_dash|min:3|max:21|unique:subreddits',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Name is available and fits validation rules
+        return response()->json([
+            'available' => true,
+            'name' => $name,
+            'errors' => ''
+        ], 200);
     }
 }
