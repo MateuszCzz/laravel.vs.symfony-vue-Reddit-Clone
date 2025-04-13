@@ -62,7 +62,6 @@ class SubredditController extends Controller
         return response()->json([
             'available' => true,
             'name' => $name,
-            'errors' => ''
         ], 200);
     }
 }

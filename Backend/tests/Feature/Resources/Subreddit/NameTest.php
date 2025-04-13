@@ -31,7 +31,6 @@ class NameTest extends TestCase
     private const NAME_CHECK_JSON_STRUCTURE = [
         'available',
         'name',
-        'errors'
     ];
 
     // Status codes
