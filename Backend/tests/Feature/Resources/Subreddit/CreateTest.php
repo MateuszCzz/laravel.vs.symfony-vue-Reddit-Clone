@@ -10,7 +10,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Illuminate\Testing\TestResponse;
 
-class SubredditCreationTest extends TestCase
+class CreateTest extends TestCase
 {
     use RefreshDatabase, AuthHelper, SubredditHelper;
 
@@ -255,6 +255,4 @@ class SubredditCreationTest extends TestCase
             ->assertStatus(self::VALIDATION_ERROR_STATUS)
             ->assertJsonValidationErrors(['description']);
     }
-
-    //Unique name tests
 }
