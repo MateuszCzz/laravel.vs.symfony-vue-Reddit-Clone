@@ -16,12 +16,10 @@ return new class extends Migration
             $table->id();
             $table->string('name', 21)->unique();
             $table->string('description', 500)->nullable();
-            $table->enum('status', SubredditType::toArray())->default(SubredditType::PUBLIC->value);
-            $table->boolean('send_welcome_message')->default(false);
-            $table->text('welcome_message_text')->nullable();
+            $table->enum('type', SubredditType::values())->default(SubredditType::PUBLIC->value);
             $table->boolean('is_nsfw')->default(false);
-            $table->integer('amount_of_members')->default(0); //TODO
-            $table->foreignId('creator_id')->constrained('users')->nullable();
+            // $table->integer('amount_of_members')->default(0); //TODO
+            $table->foreignId('creator_id')->constrained('users');
             $table->timestamps();
         });
     }

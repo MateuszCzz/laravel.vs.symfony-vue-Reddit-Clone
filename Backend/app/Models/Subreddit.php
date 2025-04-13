@@ -13,7 +13,14 @@ class Subreddit extends Model
     use HasFactory;
 
     protected $guarded = [
-        'amount_of_members',
+        // 'amount_of_members',
+    ];
+
+    protected $fillable = [
+        'name',
+        'description',
+        'type',
+        'is_nsfw',
         'creator_id',
     ];
 
