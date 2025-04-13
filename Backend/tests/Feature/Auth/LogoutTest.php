@@ -23,7 +23,7 @@ class LogoutTest extends TestCase
      * @param string $password The password of the user.
      * @return \Illuminate\Testing\TestResponse The response from the logout request.
      */
-    private function logoutUserWithCredentialsPost(bool $logoutWithNickname = true, string $nickname = self::USER_NICKNAME, string $email = self::USER_EMAIL, string $password = self::USER_PASSWORD): \Illuminate\Testing\TestResponse
+    private function logoutUserWithCredentialsPost(bool $logoutWithNickname = true, string $nickname = self::USER_NICKNAME_DEFAULT, string $email = self::USER_EMAIL_DEFAULT, string $password = self::USER_PASSWORD_DEFAULT): \Illuminate\Testing\TestResponse
     {
         return $this->postJson(self::LOGOUT_ALL_CREDENTIALS_ROUTE, [
             'login' => $logoutWithNickname ? $nickname : $email,
@@ -77,7 +77,7 @@ class LogoutTest extends TestCase
         User::find($response->json('user.id'))
             ->createToken();
 
-        $this->logoutUserPost($response->json('access_token'), true, self::USER_PASSWORD . 'error')
+        $this->logoutUserPost($response->json('access_token'), true, self::USER_PASSWORD_DEFAULT . 'error')
             ->assertStatus(self::VALIDATION_ERROR_STATUS)
             ->assertJsonValidationErrors([
                 'password' => ['The provided credentials are incorrect.'],
@@ -120,8 +120,8 @@ class LogoutTest extends TestCase
         $response = $this->loginUserPost();
 
         // Create second user
-        $this->createUser(self::USER_NICKNAME . '2', self::USER_EMAIL . '2');
-        $response2 = $this->loginUserPost(nickname: self::USER_NICKNAME . '2');
+        $this->createUser(self::USER_NICKNAME_DEFAULT . '2', self::USER_EMAIL_DEFAULT . '2');
+        $response2 = $this->loginUserPost(nickname: self::USER_NICKNAME_DEFAULT . '2');
 
         // Logout first user
         $this->logoutUserPost($response->json('access_token'));

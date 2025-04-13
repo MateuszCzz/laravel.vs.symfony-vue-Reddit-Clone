@@ -4,10 +4,10 @@ namespace Tests\Feature\Traits;
 
 use App\Enum\TokenAbility;
 use App\Enum\TokenName;
+use App\Models\PersonalAccessToken;
 use App\Models\User;
 use Illuminate\Support\Collection;
 use Illuminate\Testing\TestResponse;
-use Illuminate\Support\Facades\DB;
 
 trait AuthHelper
 {
@@ -15,13 +15,12 @@ trait AuthHelper
     private const LOGIN_ROUTE = '/api/auth/login';
     private const LOGOUT_ROUTE = '/api/auth/logout';
     private const LOGOUT_ALL_ROUTE = '/api/auth/logout-all';
-    private const CHECK_NICKNAME_ROUTE = '/api/auth/check-nickname/';
     private const REFRESH_TOKEN_ROUTE = '/api/auth/refresh-token';
 
     // Status codes:
     private const VALIDATION_ERROR_STATUS = 422;
-    private const SUCCESSFUL_NICKNAME_CHECK_STATUS = 200;
     private const SUCCESSFUL_LOGOUT_STATUS = 205;
+    private const AUTH_FAILED_STATUS = 401;
 
     // JSON structures:
     private const SUCCESSFUL_AUTH_JSON_STRUCTURE = [
@@ -30,15 +29,10 @@ trait AuthHelper
         'refresh_token',
     ];
 
-    private const SUCCESSFUL_NICKNAME_CHECK_JSON_STRUCTURE = [
-        'available',
-        'nickname',
-    ];
-
     // User data:
-    private const USER_PASSWORD = 'P@ssword1';
-    private const USER_NICKNAME = 'test_user_nickname';
-    private const USER_EMAIL = 'test_user_email@example.com';
+    private const USER_PASSWORD_DEFAULT = 'P@ssword1';
+    private const USER_NICKNAME_DEFAULT = 'test_user_nickname';
+    private const USER_EMAIL_DEFAULT = 'test_user_email@example.com';
     private const TEST_NICKNAME_SHORT = 'te';
     private const TEST_NICKNAME_LONG = 'test_user_nickname_that_is_too_long';
     private const TEST_NICKNAME_SPECIAL_CHARACTERS = 'test_user_nickname$#';
@@ -51,7 +45,7 @@ trait AuthHelper
      * @param string $password The password of the user.
      * @return \App\Models\User The created User instance.
      */
-    private function createUser(string $nickname = self::USER_NICKNAME, string $email = self::USER_EMAIL, string $password = self::USER_PASSWORD): User
+    private function createUser(string $nickname = self::USER_NICKNAME_DEFAULT, string $email = self::USER_EMAIL_DEFAULT, string $password = self::USER_PASSWORD_DEFAULT): User
     {
         return User::factory()->create([
             'nickname' => $nickname,
@@ -63,11 +57,11 @@ trait AuthHelper
     /**
      * Generate a new access token for the given user.
      *
-     * @param User|null $user The user for whom the access token is being created. 
+     * @param User|null $user The user for whom the access token is being created. When not provided new user will be generated using factory.
      * @param bool $isExpired Whether the token should be expired immediately.
      * @param bool $toReturnPlainToken Whether to return the plain text token or the token model.
      * @param bool $isRememberMe Whether remember-me token should be created.
-     * @return string|array The access token in plain text format or the token model.
+     * @return string|array The access token in plain text format or array containing both the token model and plain text token.
      */
     private function createAccessToken(?User $user = null, bool $isExpired = false, bool $toReturnPlainToken = true, bool $isRememberMe = false): string|array
     {
@@ -94,7 +88,7 @@ trait AuthHelper
      * @param bool $rememberMe Whether to set the "remember me" flag.
      * @return \Illuminate\Testing\TestResponse The response from the login request.
      */
-    private function loginUserPost(bool $loginWithNickname = true, string $nickname = self::USER_NICKNAME, string $email = self::USER_EMAIL, string $password = self::USER_PASSWORD, bool $rememberMe = false): TestResponse
+    private function loginUserPost(bool $loginWithNickname = true, string $nickname = self::USER_NICKNAME_DEFAULT, string $email = self::USER_EMAIL_DEFAULT, string $password = self::USER_PASSWORD_DEFAULT, bool $rememberMe = false): TestResponse
     {
         return $this->postJson(self::LOGIN_ROUTE, [
             'login' => $loginWithNickname ? $nickname : $email,
@@ -111,7 +105,7 @@ trait AuthHelper
      * @param string $password The password of the user.
      * @return \Illuminate\Testing\TestResponse The response from the logout request.
      */
-    private function logoutUserPost(string $token, bool $remove_all = false, string $password = self::USER_PASSWORD): TestResponse
+    private function logoutUserPost(string $token, bool $remove_all = false, string $password = self::USER_PASSWORD_DEFAULT): TestResponse
     {
         $data = [];
 
@@ -127,21 +121,6 @@ trait AuthHelper
     }
 
     /**
-     * Make a GET request to check given nickname availability.
-     * 
-     * @param string $nickname The nickname to be checked.
-     * @param string|null $token the authorization token to be included in the request header.
-     * @return \Illuminate\Testing\TestResponse The response from the nickname-check request.
-     */
-    private function nicknameCheckGet(string $nickname = self::USER_NICKNAME, ?string $token = null): TestResponse
-    {
-        return $this->getJson(self::CHECK_NICKNAME_ROUTE . $nickname, [
-            'Authorization' => "Bearer $token",
-        ]);
-        ;
-    }
-
-    /**
      * Find personal access tokens for a specific user.
      *
      * @param int $userId The ID of the user to search for.
@@ -150,12 +129,11 @@ trait AuthHelper
      */
     private function findUserTokens(int $userId, string $tokenName = TokenName::ACCESS_TOKEN->value): Collection
     {
-        return DB::table('personal_access_tokens')
-            ->where([
-                ['tokenable_id', '=', $userId],
-                ['name', '=', $tokenName],
-                ['tokenable_type', '=', 'App\\Models\\User']
-            ])
-            ->get();
+        return PersonalAccessToken::where([
+            ['tokenable_id', $userId],
+            ['name', $tokenName],
+            ['tokenable_type', User::class]
+        ])->get();
     }
+
 }

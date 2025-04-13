@@ -20,8 +20,6 @@ class CreateTest extends TestCase
     private const TEST_SUBREDDIT_NAME_SPECIAL_CHARACTERS = 'S@bre$$it!';
     private const TEST_SUBREDDIT_TYPE = 'invalid_type';
 
-    private const AUTH_FAILED_STATUS = 401;
-
     /**
      * Make a POST request to create a new subreddit.
      *
@@ -56,7 +54,7 @@ class CreateTest extends TestCase
     }
 
     #[Test]
-    public function test_successful_creation_creates_new_subreddit_in_database(): void
+    public function test_new_subreddit_is_created_in_database(): void
     {
         $token = $this->createAccessToken();
 

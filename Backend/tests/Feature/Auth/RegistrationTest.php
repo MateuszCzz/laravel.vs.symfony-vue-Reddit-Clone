@@ -24,7 +24,7 @@ class RegistrationTest extends TestCase
      * @param string $password The password of the user.
      * @return TestResponse The response from the register request.
      */
-    private function registerUserPost(string $nickname = self::USER_NICKNAME, string $email = self::USER_EMAIL, string $password = self::USER_PASSWORD, string $passwordConfirm = self::USER_PASSWORD): TestResponse
+    private function registerUserPost(string $nickname = self::USER_NICKNAME_DEFAULT, string $email = self::USER_EMAIL_DEFAULT, string $password = self::USER_PASSWORD_DEFAULT, string $passwordConfirm = self::USER_PASSWORD_DEFAULT): TestResponse
     {
         return $this->postJson(self::REGISTER_ROUTE, [
             'nickname' => $nickname,
@@ -47,8 +47,8 @@ class RegistrationTest extends TestCase
     {
         $this->registerUserPost();
         $this->assertDatabaseHas('users', [
-            'nickname' => self::USER_NICKNAME,
-            'email' => self::USER_EMAIL,
+            'nickname' => self::USER_NICKNAME_DEFAULT,
+            'email' => self::USER_EMAIL_DEFAULT,
         ]);
     }
 
@@ -107,7 +107,7 @@ class RegistrationTest extends TestCase
     #[Test]
     public function test_user_cannot_register_with_mismatched_passwords(): void
     {
-        $this->registerUserPost(passwordConfirm: self::USER_PASSWORD . 'error')
+        $this->registerUserPost(passwordConfirm: self::USER_PASSWORD_DEFAULT . 'error')
             ->assertStatus(self::VALIDATION_ERROR_STATUS)
             ->assertJsonValidationErrors([
                 'password' => 'The password field confirmation does not match.'

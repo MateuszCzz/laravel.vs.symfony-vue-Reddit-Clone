@@ -10,10 +10,25 @@ class ResourceAccessTest extends TestCase
 {
     use RefreshDatabase, AuthHelper;
 
-    //TODO: once implemented change route from logout
-    private const FAILED_TOKEN_AUTH_STATUS = 401;
+    // Test Data
+    private const TEST_TOKEN = 'token';
+    
+    // Routes
+    private const CHECK_NICKNAME_ROUTE = '/api/auth/check-nickname/';
+
+    // Validation messages
     private const AUTH_ERROR_MESSAGE = 'Unauthenticated.';
     private const AUTH_ERROR_MESSAGE_EXPIRED_TOKEN = 'Unauthenticated - The token expired.';
+
+    // JSON structures
+    private const NICKNAME_CHECK_JSON_STRUCTURE = [
+        'available',
+        'nickname',
+    ];
+
+    // Status codes
+    private const SUCCESSFUL_NICKNAME_CHECK_STATUS = 200;
+    private const FAILED_TOKEN_AUTH_STATUS = 401;
 
     #[Test]
     public function user_can_access_protected_resource_with_valid_token(): void
@@ -54,24 +69,36 @@ class ResourceAccessTest extends TestCase
     public function user_can_access_non_protected_resource_with_valid_token(): void
     {
         $token = $this->createAccessToken();
-        $this->nicknameCheckGet(token: $token)
-            ->assertJsonStructure(self::SUCCESSFUL_NICKNAME_CHECK_JSON_STRUCTURE)
+        $this->getJson(
+            self::CHECK_NICKNAME_ROUTE . self::USER_NICKNAME_DEFAULT,
+            [
+                'Authorization' => "Bearer $token"
+            ]
+        )
+            ->assertJsonStructure(self::NICKNAME_CHECK_JSON_STRUCTURE)
             ->assertStatus(self::SUCCESSFUL_NICKNAME_CHECK_STATUS);
     }
 
     #[Test]
     public function user_can_access_non_protected_resource_without_token(): void
     {
-        $this->nicknameCheckGet(token: '')
-            ->assertJsonStructure(self::SUCCESSFUL_NICKNAME_CHECK_JSON_STRUCTURE)
+        $this->getJson(
+            self::CHECK_NICKNAME_ROUTE . self::USER_NICKNAME_DEFAULT,
+        )
+            ->assertJsonStructure(self::NICKNAME_CHECK_JSON_STRUCTURE)
             ->assertStatus(self::SUCCESSFUL_NICKNAME_CHECK_STATUS);
     }
 
     #[Test]
     public function user_can_access_non_protected_resource_with_invalid_token(): void
     {
-        $this->nicknameCheckGet(token: 'error')
-            ->assertJsonStructure(self::SUCCESSFUL_NICKNAME_CHECK_JSON_STRUCTURE)
+        $this->getJson(
+            self::CHECK_NICKNAME_ROUTE . self::USER_NICKNAME_DEFAULT,
+            [
+                'Authorization' => "Bearer" . self::TEST_TOKEN
+            ]
+        )
+            ->assertJsonStructure(self::NICKNAME_CHECK_JSON_STRUCTURE)
             ->assertStatus(self::SUCCESSFUL_NICKNAME_CHECK_STATUS);
     }
 
@@ -85,7 +112,7 @@ class ResourceAccessTest extends TestCase
             [],
             ['Authorization' => "Bearer $token",]
         )
-        ->assertJson(['message' => self::AUTH_ERROR_MESSAGE])
-        ->assertStatus(self::FAILED_TOKEN_AUTH_STATUS);
+            ->assertJson(['message' => self::AUTH_ERROR_MESSAGE])
+            ->assertStatus(self::FAILED_TOKEN_AUTH_STATUS);
     }
 }

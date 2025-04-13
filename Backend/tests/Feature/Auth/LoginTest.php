@@ -88,14 +88,14 @@ class LoginTest extends TestCase
     #[Test]
     public function test_user_cannot_login_with_unregistered_credentials(): void
     {
-        $this->loginUserPost(false, email: self::USER_EMAIL . 'error')
+        $this->loginUserPost(false, email: self::USER_EMAIL_DEFAULT . 'error')
             ->assertStatus(self::VALIDATION_ERROR_STATUS)
             ->assertJsonValidationErrors([
                 'login' => 'The provided credentials are incorrect.',
                 'password' => 'The provided credentials are incorrect.'
             ]);
 
-        $this->loginUserPost(nickname: self::USER_NICKNAME . 'error')
+        $this->loginUserPost(nickname: self::USER_NICKNAME_DEFAULT . 'error')
             ->assertStatus(self::VALIDATION_ERROR_STATUS)
             ->assertJsonValidationErrors([
                 'login' => 'The provided credentials are incorrect.',
@@ -107,14 +107,14 @@ class LoginTest extends TestCase
     public function test_user_cannot_login_with_incorrect_credentials(): void
     {
         $this->createUser();
-        $this->loginUserPost(false, email: self::USER_EMAIL . 'error')
+        $this->loginUserPost(false, email: self::USER_EMAIL_DEFAULT . 'error')
             ->assertStatus(self::VALIDATION_ERROR_STATUS)
             ->assertJsonValidationErrors([
                 'login' => 'The provided credentials are incorrect.',
                 'password' => 'The provided credentials are incorrect.'
             ]);
 
-        $this->loginUserPost(nickname: self::USER_NICKNAME . 'error')
+        $this->loginUserPost(nickname: self::USER_NICKNAME_DEFAULT . 'error')
             ->assertStatus(self::VALIDATION_ERROR_STATUS)
             ->assertJsonValidationErrors([
                 'login' => 'The provided credentials are incorrect.',
