@@ -39,7 +39,7 @@ class AuthController extends Controller
     {
         $request->validate([
             'nickname' => 'required|string|max:20|min:3|unique:users|alpha_dash:ascii',
-            'email' => 'string|email|max:200',
+            'email' => 'sometimes|string|email|max:200',
             'password' => [
                 'confirmed',
                 'string',
@@ -47,7 +47,7 @@ class AuthController extends Controller
                 Password::min(8)
                     ->mixedCase()
                     ->numbers()
-                // ->uncompromised(3) TODO: find solution for unreliable test failing
+                // ->uncompromised(3) //TODO: find solution for unreliable test failing
             ],
         ]);
 
@@ -155,13 +155,16 @@ class AuthController extends Controller
     public function checkNickname(string $nickname): JsonResponse
     {
         $validator = \Validator::make(['nickname' => $nickname], [
-            'nickname' => 'required|alpha_dash:ascii|min:3|max:20|unique:users',
+            'nickname' => 'required|alpha_dash|min:3|max:20|unique:users',
         ]);
+
         if ($validator->fails()) {
-            throw new ValidationException($validator);
+            return response()->json([
+                'errors' => $validator->errors()
+            ], 422);
         }
 
-        // Nickname is available and without injection
+        // Nickname is available and fits validation rules
         return response()->json([
             'available' => true,
             'nickname' => $nickname,
