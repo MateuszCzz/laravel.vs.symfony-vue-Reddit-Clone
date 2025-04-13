@@ -2,6 +2,7 @@
 
 use App\Enum\TokenAbility;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\SubredditController;
 use Illuminate\Support\Facades\Route;
 
 // Routes dealing with authentication
@@ -29,7 +30,13 @@ Route::prefix('auth')
         Route::get('check-nickname/{nickname}', 'checkNickname');
     });
 
-
+Route::prefix('subreddits')
+    ->controller(SubredditController::class)
+    ->group(function () {
+        Route::post('/', 'store')->middleware(
+            ['auth:sanctum', 'ability:' . TokenAbility::ACCESS_API->value]
+        );
+    });
 // Route::get('/user', function (Request $request) {
 //     return $request->user();
 // })
