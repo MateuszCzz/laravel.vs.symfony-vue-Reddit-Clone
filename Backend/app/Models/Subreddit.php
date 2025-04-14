@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enum\SubredditType;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,10 +12,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Subreddit extends Model
 {
     use HasFactory;
-
-    protected $guarded = [
-        // 'amount_of_members',
-    ];
 
     protected $fillable = [
         'name',
@@ -25,8 +22,7 @@ class Subreddit extends Model
     ];
 
     protected $casts = [
-        'status' => SubredditType::class,
-        'send_welcome_message' => 'boolean',
+        'type' => SubredditType::class,
         'is_nsfw' => 'boolean',
     ];
 
