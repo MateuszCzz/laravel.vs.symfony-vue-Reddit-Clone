@@ -24,6 +24,7 @@ class Subreddit extends Model
     protected $casts = [
         'type' => SubredditType::class,
         'is_nsfw' => 'boolean',
+        'approval_settings' => 'integer',
     ];
 
     public function creator(): BelongsTo

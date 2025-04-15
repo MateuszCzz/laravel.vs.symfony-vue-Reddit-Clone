@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('description', 500)->nullable();
             $table->enum('type', SubredditType::values())->default(SubredditType::PUBLIC->value);
             $table->boolean('is_nsfw')->default(false);
-            // $table->integer('amount_of_members')->default(0); //TODO
+            $table->smallInteger('approval_settings')->default(0)->unsigned();
             $table->foreignId('creator_id')->constrained('users');
             $table->timestamps();
         });
