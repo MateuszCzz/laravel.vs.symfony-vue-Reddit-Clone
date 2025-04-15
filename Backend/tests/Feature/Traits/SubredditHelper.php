@@ -9,14 +9,18 @@ use App\Models\User;
 
 trait SubredditHelper
 {
-    // Routes:
-    private const SUBREDDIT_CREATION_ROUTE = '/api/subreddits/';
+    // Subreddit data
+    private const SUBREDDIT_NAME_DEFAULT = 'Subreddit1';
 
-    // Status codes:
+    // Routes
+    private const SUBREDDIT_RESOURCE_ROUTE = '/api/subreddits/';
+
+    // Status codes
     private const SUCCESSFUL_CREATION_STATUS = 201;
+    private const SUCCESSFUL_FETCH_STATUS = 200;
     private const VALIDATION_ERROR_STATUS = 422;
 
-    // JSON structures:
+    // JSON structures
     private const SUCCESSFUL_SUBREDDIT_CREATION_JSON_STRUCTURE = [
         'subreddit' => [
             'id',
@@ -34,9 +38,7 @@ trait SubredditHelper
         ],
     ];
 
-    // Subreddit data:
-    private const SUBREDDIT_NAME_DEFAULT = 'Subreddit1';
-
+    // Methods
     /**
      * Generate a new subreddit.
      *

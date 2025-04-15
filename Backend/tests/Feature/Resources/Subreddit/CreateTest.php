@@ -32,7 +32,7 @@ class CreateTest extends TestCase
      */
     private function createSubredditPost(?string $token = null, string $name = self::SUBREDDIT_NAME_DEFAULT, string $description = self::SUBREDDIT_DESCRIPTION_DEFAULT, SubredditType $type = SubredditType::PUBLIC , bool $isNsfw = false): TestResponse
     {
-        return $this->postJson(self::SUBREDDIT_CREATION_ROUTE, [
+        return $this->postJson(self::SUBREDDIT_RESOURCE_ROUTE, [
             'name' => $name,
             'description' => $description,
             'type' => $type,
@@ -127,7 +127,7 @@ class CreateTest extends TestCase
     {
         $token = $this->createAccessToken();
 
-        $this->postJson(self::SUBREDDIT_CREATION_ROUTE, [
+        $this->postJson(self::SUBREDDIT_RESOURCE_ROUTE, [
             'name' => self::SUBREDDIT_NAME_DEFAULT,
         ], [
             'Authorization' => "Bearer $token",
@@ -214,7 +214,7 @@ class CreateTest extends TestCase
     {
         $token = $this->createAccessToken();
 
-        $this->postJson(self::SUBREDDIT_CREATION_ROUTE, [
+        $this->postJson(self::SUBREDDIT_RESOURCE_ROUTE, [
             'name' => self::SUBREDDIT_NAME_DEFAULT,
             'is_nsfw' => 5,
         ], [
@@ -230,7 +230,7 @@ class CreateTest extends TestCase
     {
         $token = $this->createAccessToken();
 
-        $this->postJson(self::SUBREDDIT_CREATION_ROUTE, [
+        $this->postJson(self::SUBREDDIT_RESOURCE_ROUTE, [
             'name' => self::SUBREDDIT_NAME_DEFAULT,
             'type' => self::TEST_SUBREDDIT_TYPE
         ], [
