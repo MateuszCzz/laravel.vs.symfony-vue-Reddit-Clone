@@ -19,9 +19,8 @@ trait AuthHelper
 
     // Status codes:
     private const VALIDATION_ERROR_STATUS = 422;
+    private const AUTH_ERROR_STATUS = 401;
     private const SUCCESSFUL_LOGOUT_STATUS = 205;
-    private const AUTH_FAILED_STATUS = 401;
-
     // JSON structures:
     private const SUCCESSFUL_AUTH_JSON_STRUCTURE = [
         'user' => ['id', 'nickname', 'email'],

@@ -150,7 +150,7 @@ class CreateTest extends TestCase
     public function test_subreddit_creation_fails_when_not_authenticated(): void
     {
         $this->createSubredditPost()
-            ->assertStatus(self::AUTH_FAILED_STATUS);
+            ->assertStatus(self::AUTH_ERROR_STATUS);
     }
 
     #[Test]

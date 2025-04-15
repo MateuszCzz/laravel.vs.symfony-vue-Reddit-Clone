@@ -77,7 +77,7 @@ class NameTest extends TestCase
     public function test_name_check_fails_when_not_authenticated(): void
     {
         $this->nameCheckGet()
-            ->assertStatus(self::AUTH_FAILED_STATUS);
+            ->assertStatus(self::AUTH_ERROR_STATUS);
     }
 
     #[Test]
